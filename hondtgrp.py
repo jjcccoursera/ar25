@@ -37,14 +37,14 @@ PARTIDOS = {
     "Votos em branco": ['Outros'],
     "Votos nulos": ['Outros'],
     "PPD/PSD.CDS-PP": ['PPD+CDS+IL+CH'],
-    "PS": ['L+BE+PCP+PAN'],
+    "PS": ['L+BE+PCP+PAN+PS'],
     "CH": ['PPD+CDS+IL+CH'],
     "IL": ['PPD+CDS+IL+CH'],
-    "L": ['L+BE+PCP+PAN'],
-    "B.E.": ['L+BE+PCP+PAN'],
+    "L": ['L+BE+PCP+PAN+PS'],
+    "B.E.": ['L+BE+PCP+PAN+PS'],
     "ADN": ['ADN'],
-    "PAN": ['L+BE+PCP+PAN'],
-    "PCP-PEV": ['L+BE+PCP+PAN'],
+    "PAN": ['L+BE+PCP+PAN+PS'],
+    "PCP-PEV": ['L+BE+PCP+PAN+PS'],
     "PCTP/MRPP": ['PCTP/MRPP'],
     "R.I.R.": ['R.I.R.'],
     "VP": ['VP'],
@@ -150,7 +150,7 @@ deps = {
 }
 
 # Get all unique labels (assuming 1 label per party here)
-grupos = {labels[0] for labels in PARTIDOS.values()}  # Using set comprehension
+# grupos = {labels[0] for labels in PARTIDOS.values()}  # Using set comprehension
     
 # Process each district
 for distrito in DISTRITOS:
@@ -184,21 +184,3 @@ print("POR AGRUPAMENTO:")
 for label, count in sorted(final_results['by_label'].items(), key=lambda x: -x[1]):
     print(f"   {label}: {count}")
 
-"""
-
-    print(f"\nMANDATOS DE {district_name}:")
-    # 1. Process party-level mandates
-    print("POR PARTIDO:")
-    for party, mandates in mandate_allocation['POR PARTIDO'].items():
-        if mandates > 0:
-            deps['parties'][party] += mandates
-            print(f"   {party}: {mandates} mandatos")
-    # 2. Process label-level mandates (if needed)
-    print("POR AGRUPAMENTO:")
-    for dim in range(len(next(iter(PARTIDOS.values())))):
-        print(f"AGRUPAMENTO {dim+1}:")
-        for party, mandates in mandate_allocation[f'AGRUPAMENTO {dim+1}'].items():
-            if mandates > 0:
-                deps['labels'][dim][party] += mandates
-                print(f"   {party}: {mandates} mandatos")
-"""   
