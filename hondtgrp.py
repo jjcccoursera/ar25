@@ -3,6 +3,11 @@ from math import floor
 from google.cloud import bigquery
 from collections import defaultdict
 
+
+"""
+    Allocates mandates to parties and groups of parties in all districts of Portugal using the Hondt method.
+"""
+
 # Configuração
 PROJECTO = "apps-448519"
 DATASET = "AR25"
@@ -71,10 +76,12 @@ def allocate_mandates_hondt(district_name, df):
                            - distrito: district name
                            - partido: party name
                            - votos: votes received
-                           - mandatos: mandates to allocate (will be summed)
+                           - mandatos: mandates actually allocated
     
     Returns:
-        dict: A dictionary with parties as keys and allocated mandates as values
+        results (dict): A dictionary with parties as keys and allocated mandates as values
+        label_votes (dict): A dictionary with labels as keys and votes as values
+        parties (dict): A dictionary with parties as keys and votes as values
     """
 
     # Initialize the results dict
@@ -127,7 +134,7 @@ def allocate_mandates_hondt(district_name, df):
     for party, count in party_mandates.items():
         results['by_party'][party] += count
         if count > 0:
-            print("   ", party, count)
+            print("   ", party, count, parties[party])
         
     print("POR AGRUPAMENTO:")
     for label, count in label_mandates.items():
@@ -151,7 +158,6 @@ deps = {
     'parties': defaultdict(int),
     'labels': defaultdict(int)  # Single dimension
 }
-
 votes = { 
     'parties': defaultdict(int),
     'labels': defaultdict(int)
@@ -184,7 +190,6 @@ final_results = {
     'by_party': dict(deps['parties']),
     'by_label': dict(deps['labels'])
 }
-
 final_votes = {
     'by_party': dict(votes['parties']),
     'by_label': dict(votes['labels'])
