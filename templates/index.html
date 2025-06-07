@@ -203,7 +203,7 @@
                     <th style="padding: 8px; text-align: right; font-size: 18px">Votos</th>
                     <th style="padding: 8px; text-align: right; font-size: 18px">% Votos</th>
                     <th style="padding: 8px; text-align: right; font-size: 18px">Deps</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">% Deps</th>
+                    <th style="padding: 8px; text-align: right; font-size: 18px">V / Dep</th>
                 </tr>
             </thead>
             <tbody>
@@ -214,7 +214,10 @@
                     <td style="padding: 4px; text-align: right;">{{ "{:,}".format(party['votos']) }}</td>
                     <td style="padding: 4px; text-align: right;">{{ "%.2f"|format(party['votos']/total_valid*100) }}%</td>
                     <td style="padding: 4px; text-align: right;">{{ party['mandatos'] if party['mandatos'] > 0 else "" }}</td>
-                    <td style="padding: 4px; text-align: right;">{{ "%.2f"|format(party['mandatos']/total_mandates*100) if party['mandatos'] > 0 and total_mandates > 0 else "" }}%</td>
+                    <td style="padding: 4px; text-align: right;">{% if party['mandatos'] > 0 %}
+                                                                        {{ "{:,.0f}".format(party['votos']/party['mandatos']) }}
+                                                                 {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
                 <!-- Valid votes subtotal -->
@@ -223,7 +226,7 @@
                     <td style="padding: 8px; text-align: right;">{{ "{:,}".format(total_valid) }}</td>
                     <td style="padding: 8px; text-align: right;">100.00%</td>
                     <td style="padding: 8px; text-align: right;">{{ "{:,}".format(total_mandates) }}</td>
-                    <td style="padding: 8px; text-align: right;">100.00%</td>
+                    <td style="padding: 8px; text-align: right;">{{ "{:,.0f}".format(total_valid/total_mandates) }}</td>
                 </tr>
                 
                 <!-- Blank votes -->
@@ -260,7 +263,7 @@
                     <th style="padding: 8px; text-align: right; font-size: 18px">Votos</th>
                     <th style="padding: 8px; text-align: right; font-size: 18px">%</th>
                     <th style="padding: 8px; text-align: right; font-size: 18px">Deps</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">% Deps</th>
+                    <th style="padding: 8px; text-align: right; font-size: 18px">V / Dep</th>
                 </tr>
             </thead>
             <tbody><!-- Filled by JavaScript --></tbody>

@@ -148,15 +148,14 @@ function updateDistrictTable(data) {
     
     // Add party rows
     parties.forEach(([party, {votos, mandatos}]) => {
+        const votesPerMandate = mandatos > 0 ? Math.round(votos/mandatos) : null;
         const row = document.createElement('tr');
         row.innerHTML = `
             <td style="padding: 4px;">${party}</td>
             <td style="padding: 4px; text-align: right;">${votos.toLocaleString('pt-PT')}</td>
             <td style="padding: 4px; text-align: right;">${((votos/totalVotes)*100).toFixed(2)}%</td>
             <td style="padding: 4px; text-align: right;">${mandatos > 0 ? mandatos : ''}</td>
-            <td style="padding: 4px; text-align: right;">${
-                mandatos > 0 && totalMandates > 0 ? ((mandatos/totalMandates)*100).toFixed(2) : ''
-            }%</td>
+            <td style="padding: 4px; text-align: right;">${votesPerMandate ? votesPerMandate.toLocaleString('pt-PT') : ''}</td>
         `;
         tbody.appendChild(row);
     });
@@ -169,7 +168,7 @@ function updateDistrictTable(data) {
         <td style="padding: 8px; text-align: right;">${totalVotes.toLocaleString('pt-PT')}</td>
         <td style="padding: 8px; text-align: right;">100.00%</td>
         <td style="padding: 8px; text-align: right;">${totalMandates.toLocaleString('pt-PT')}</td>
-        <td style="padding: 8px; text-align: right;">100.00%</td>
+        <td style="padding: 8px; text-align: right;"> ${totalMandates > 0 ? Math.round(totalVotes/totalMandates).toLocaleString('pt-PT') : ''}</td>
     `;
     tbody.appendChild(validRow);
     
