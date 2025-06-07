@@ -1,13 +1,22 @@
-runtime: python39  # or newer
-service: ar25  # name your GAE service
-instance_class: F2  # or F1 for cheaper, lower performance
+runtime: python39
+service: ar25
+instance_class: F2
 
-entrypoint: gunicorn -b :$PORT -w 2 -k gthread --threads 2 --timeout 30 main:app
+entrypoint: gunicorn --bind :$PORT --workers 2 --threads 2 --timeout 120 --preload main:app
+
+env_variables:
+  FLASK_ENV: "production"
+  GUNICORN_CMD_ARGS: "--timeout=120 --preload"
 
 handlers:
-- url: /icons
-  static_dir: static/icons
 - url: /static
   static_dir: static
+- url: /icons
+  static_dir: static/icons
 - url: /.*
   script: auto
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 3
+  target_cpu_utilization: 0.6

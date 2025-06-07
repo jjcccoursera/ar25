@@ -5,6 +5,7 @@ from collections import defaultdict
 from operator import itemgetter
 
 app = Flask(__name__, static_folder='static')
+
 # Configuração
 PROJECTO = "apps-448519"
 DATASET = "AR25"
@@ -147,5 +148,11 @@ def serve_index():
 def get_partidos():
     return jsonify(PARTIDOS)
 
+# WSGI entry point
+def create_app():
+    return app
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
+    # app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
+    port = int(os.environ.get('PORT', 8080))  # GAE uses 8080 by default
+    app.run(host='0.0.0.0', port=port)  
