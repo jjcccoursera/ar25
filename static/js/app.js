@@ -153,7 +153,7 @@ function updateDistrictTable(data) {
         row.innerHTML = `
             <td style="padding: 4px;">${party}</td>
             <td style="padding: 4px; text-align: right;">${votos.toLocaleString('pt-PT')}</td>
-            <td style="padding: 4px; text-align: right;">${((votos/totalVotes)*100).toFixed(2)}%</td>
+            <td style="padding: 4px; text-align: right;">${((votos/(totalVotes - (data['Votos em branco']?.votos || 0) - (data['Votos nulos']?.votos || 0)))*100).toFixed(2)}%</td>
             <td style="padding: 4px; text-align: right;">${mandatos > 0 ? mandatos : ''}</td>
             <td style="padding: 4px; text-align: right;">${votesPerMandate ? votesPerMandate.toLocaleString('pt-PT') : ''}</td>
         `;
@@ -165,7 +165,7 @@ function updateDistrictTable(data) {
     validRow.style.cssText = 'font-weight: bold; background-color: #e6f7e6; border-top: 2px solid #dbcfcf;';
     validRow.innerHTML = `
         <td style="padding: 8px;">Votos válidos</td>
-        <td style="padding: 8px; text-align: right;">${totalVotes.toLocaleString('pt-PT')}</td>
+        <td style="padding: 8px; text-align: right;">${(totalVotes - (data['Votos em branco']?.votos || 0) - (data['Votos nulos']?.votos || 0)).toLocaleString('pt-PT')}</td>
         <td style="padding: 8px; text-align: right;">100.00%</td>
         <td style="padding: 8px; text-align: right;">${totalMandates.toLocaleString('pt-PT')}</td>
         <td style="padding: 8px; text-align: right;"> ${totalMandates > 0 ? Math.round(totalVotes/totalMandates).toLocaleString('pt-PT') : ''}</td>
@@ -199,7 +199,7 @@ function updateDistrictTable(data) {
     }
     
     // Add grand total row
-    const totalAll = totalVotes + (data['Votos em branco']?.votos || 0) + (data['Votos nulos']?.votos || 0);
+    const totalAll = totalVotes;
     const totalRow = document.createElement('tr');
     totalRow.style.cssText = 'font-weight: bold; background-color: #e6f7e6; border-top: 2px solid #000;';
     totalRow.innerHTML = `
