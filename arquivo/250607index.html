@@ -44,22 +44,22 @@
             border-style: solid;
             border-color: (rgb(128, 248, 128))
         }
-        #resultados table, #rescolig table, #district-results-container table {
+        #resultados table, #district-results-container table {
             width: 100%;
             margin-top: 15px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        #resultados th, , #rescolig th, #district-results-container th {
+        #resultados th, #district-results-container th {
             background-color: #4CAF50;
             color: white;
         }
 
-        #resultados tr:nth-child(even), #rescolig tr:nth-child(even), #district-results-container tr:nth-child(even) {
+        #resultados tr:nth-child(even), #district-results-container tr:nth-child(even) {
             background-color: #f9f9f9;
         }
 
-        #resultados tr:hover, #rescolig tr:hover,#district-results-container tr:hover {
+        #resultados tr:hover, #district-results-container tr:hover {
             background-color: #f1f1f1;
         }
 
@@ -146,7 +146,6 @@
         </thead>
         <tbody>
             {% for label, groups in partidos.items() %}
-                {% if label not in ["Votos em branco", "Votos nulos"] %}
             <tr>
                 <td>{{ label }}</td>
                 <td>
@@ -156,7 +155,6 @@
                            class="group-input">
                 </td>
             </tr>
-                {% endif %}
             {% endfor %}
         </tbody>
     </table>
@@ -183,37 +181,24 @@
         style="display: none !important;">
     </div>
 
-    <div id="election-group-data" 
-        data-district-groups="{{ votos_colig | tojson | forceescape }}"
-        hidden
-        style="display: none !important;">
-    </div>
-
-    <div id="distrito-div" class="hidden" style="width: 96%; display: flex; flex-direction: column; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 10px; font-family: arial; color: green;">
-            <span style="color: green; font-size: 18px;">Visualizar por:</span>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="radio" id="parts" name="paroucolig" value="Partidos" checked>
-                <label for="parts">Partidos</label>
-                <input type="radio" id="coligs" name="paroucolig" value="Coligações">
-                <label for="coligs">Coligações</label>
-            </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-            <label for="distrito" style="color: green; font-family: arial; font-size: 18px; white-space: nowrap;">
-                Resultados de:  
-                <span style="font-size: 12px"></span> 
-            </label>
-            <input type="text" id="distrito" value="Total nacional" 
-                list="distritos-list" style="width: 15ch; padding: 8px;">
+    <div id="distrito-div" class="hidden" style="width: 96%;">
+        <label for="distrito" style="color: green; font-family:arial; font-size: 18px">
+                Resultados para:   <span style="font-size: 12px">(Apagar e depois clicar para escolher numa lista):</span> </label>
+        <input type="text" id="distrito" value="Total nacional" 
+            list="distritos-list" style="width: 15ch; padding: 8px; margin-top: 10px">
+        <datalist id="distritos-list">
+            <option value="Total nacional">
+            {% for distrito in distritos %}
+                <option value="{{ distrito }}">
+            {% endfor %}
+        </datalist>
+        <div style="color: green; font-family:arial; font-size: 18px; display: flex; justify-content: center; " >
+            <input type="radio" id="hourly" name="frequency" value="hourly" checked>
+            <label for="hourly" style="margin-right: 10px;">Partidos</label>
+            <input type="radio" id="daily" name="frequency" value="daily">
+            <label for="daily">Coligações</label>
         </div>
     </div>
-    <datalist id="distritos-list">
-        <option value="Total nacional">
-        {% for distrito in distritos %}
-            <option value="{{ distrito }}">
-        {% endfor %}
-    </datalist>
    
     
     <div id="resultados" style="margin-top: 20px" class="hidden">
@@ -275,90 +260,15 @@
         </table>
     </div>
     
-    <div id="rescolig" style="margin-top: 20px" class="hidden">
-        <!-- National Results Table -->
-        <table border="0" style="width: 100%; border-collapse: collapse; font-family: arial;">
-            <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th style="padding: 8px; text-align: left; font-size: 18px">Coligação</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">Votos</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">% Votos</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">Deps</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">V / Dep</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Valid votes (sorted) -->
-                 {% for colig in coligs_sorted %}
-                 <tr>
-                     <td style="padding: 4px;">{{ colig['name'] }}</td>
-                     <td style="padding: 4px; text-align: right;">{{ "{:,.0f}".format(colig['votos']/2) }}</td>
-                     <td style="padding: 4px; text-align: right;">{{ "%.2f"|format(colig['votos']/2/total_valid*100) }}%</td>
-                    <td style="padding: 4px; text-align: right;">{{ "{:,.0f}".format(colig['mandatos']/2) if colig['mandatos'] > 0 else "" }}</td>
-                    <td style="padding: 4px; text-align: right;">{% if colig['mandatos'] > 0 %}
-                                                                        {{ "{:,.0f}".format(colig['votos']/colig['mandatos']) }}
-                                                                 {% endif %}
-                    </td>
-                 </tr>
-                 {% endfor %}
 
-                  <!-- Valid votes subtotal -->
-                <tr style="font-weight: bold; background-color: #e6f7e6; border-top: 2px solid #dbcfcf;">
-                    <td style="padding: 8px;">Votos válidos</td>
-                    <td style="padding: 8px; text-align: right;">{{ "{:,}".format(total_valid) }}</td>
-                    <td style="padding: 8px; text-align: right;">100.00%</td>
-                    <td style="padding: 8px; text-align: right;">{{ "{:,}".format(total_mandates) }}</td>
-                    <td style="padding: 8px; text-align: right;">{{ "{:,.0f}".format(total_valid/total_mandates) }}</td>
-                </tr>
-
-                 <!-- Blank votes -->
-                <tr style="background-color: white;">
-                    <td style="padding: 8px;">Votos em branco</td>
-                    <td style="padding: 8px; text-align: right;">{{ "{:,}".format(blank_votes) }}</td>
-                    <td style="padding: 8px; text-align: right;">{{ "%.2f"|format(blank_votes/total_all*100) }}%</td>
-                </tr>
-                
-                <!-- Null votes -->
-                <tr style="background-color: white;">
-                    <td style="padding: 8px;">Votos nulos</td>
-                    <td style="padding: 8px; text-align: right;">{{ "{:,}".format(null_votes) }}</td>
-                    <td style="padding: 8px; text-align: right;">{{ "%.2f"|format(null_votes/total_all*100) }}%</td>
-                </tr>
-                
-                <!-- Grand total -->
-                <tr style="font-weight: bold; background-color: #e6f7e6; border-top: 2px solid #000;">
-                    <td style="padding: 8px;">TOTAL</td>
-                    <td style="padding: 8px; text-align: right;">{{ "{:,}".format(total_all) }}</td>
-                    <td style="padding: 8px; text-align: right;">100.00%</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- District Party Results Table (initially hidden) -->
+    <!-- New District Results Table (initially hidden) -->
     <div id="district-results-container" style="margin-top: 20px;" class="hidden">
         <table id="district-table" border="0" style="width: 100%; border-collapse: collapse; font-family: arial";>
             <thead>
                 <tr style="background-color: #f2f2f2;">
                     <th style="padding: 8px; text-align: left; font-size: 18px">Partido</th>
                     <th style="padding: 8px; text-align: right; font-size: 18px">Votos</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">% Votos</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">Deps</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">V / Dep</th>
-                </tr>
-            </thead>
-            <tbody><!-- Filled by JavaScript --></tbody>
-        </table>
-    </div>
-
-    <!-- District Group Results Table (initially hidden) -->
-    <div id="district-group-results-container" style="margin-top: 20px;" class="hidden">
-        <table id="district-group-table" border="0" style="width: 100%; border-collapse: collapse; font-family: arial";>
-            <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th style="padding: 8px; text-align: left; font-size: 18px">Coligação</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">Votos</th>
-                    <th style="padding: 8px; text-align: right; font-size: 18px">% Votos</th>
+                    <th style="padding: 8px; text-align: right; font-size: 18px">%</th>
                     <th style="padding: 8px; text-align: right; font-size: 18px">Deps</th>
                     <th style="padding: 8px; text-align: right; font-size: 18px">V / Dep</th>
                 </tr>

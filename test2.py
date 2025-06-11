@@ -43,8 +43,8 @@ DISTRITOS = [
 ]
 
 PARTIDOS = {
-    "Votos em branco": ['Outros'],
-    "Votos nulos": ['Outros'],
+    "Votos em branco": ['Votos em branco'],
+    "Votos nulos": ['Votos nulos'],
     "PPD/PSD.CDS-PP": ['PPD+CDS+IL'],
     "PS": ['PS'],
     "CH": ['CH'],
@@ -107,14 +107,15 @@ for _, row in election_data.iterrows():
     raw_district_results[district_name][party_name]['mandatos'] = mandatos
     
     # Skip blank/null votos for group calculations
-    if party_name in ['Votos em branco', 'Votos nulos']:
-        continue
+    # if party_name in ['Votos em branco', 'Votos nulos']:
+    #    continue
     
     # Find which group this party belongs to
     group_name = party_to_group.get(party_name, party_name)  # Default to party if ungrouped
     
     # Aggregate votos for the group
     grouped_district_results[district_name][group_name]['votos'] += votos
+    
 
 # ======================
 # 3. CALCULATE GROUP mandatos (D'HONDT)
@@ -175,14 +176,14 @@ for district in raw_district_results:
 
 # Sort groups by votes within each district
 
-for group_name in grouped_district_results:
+for district in grouped_district_results:
     # Convert to list of (party, votes) tuples and sort by votes (descending)
     sorted_groups = sorted(
-        grouped_district_results[group_name].items(),
+        grouped_district_results[district].items(),
         key=lambda x: x[1]['votos'],
         reverse=True
     )
-    
+
     # Create new ordered dictionary for this district
     ordered_groups = {}
     for group, votes in sorted_groups:
@@ -195,7 +196,6 @@ for group_name in grouped_district_results:
 # ------------------------------------
 
 
-
 # ======================
 # 4. NATIONAL TOTALS
 # ======================
@@ -205,19 +205,10 @@ raw_district_results['Total Nacional'] = defaultdict(lambda: {'votos': 0, 'manda
 grouped_district_results['Total Nacional'] = defaultdict(lambda: {'votos': 0, 'mandatos': 0})
 
 # Calculate nationwide sums for each party/group
-"""
-for district_name, parties in raw_district_results.items():
-    if district_name == 'Total Nacional': 
-        continue  # Skip our new "party"
-    
-    for party_name, data in parties.items():
-        raw_district_results['Total Nacional'][party_name]['votos'] += data['votos']
-        raw_district_results['Total Nacional'][party_name]['mandatos'] += data['mandatos']
-"""
 for district_name, groups in grouped_district_results.items():
     if district_name == 'Total Nacional': 
         continue
-    
+
     for group_name, data in groups.items():
         grouped_district_results['Total Nacional'][group_name]['votos'] += data['votos']
         grouped_district_results['Total Nacional'][group_name]['mandatos'] += data['mandatos']
@@ -243,9 +234,27 @@ sorted_parties = sorted(
     reverse=True
 )
 
+national_group_totals = defaultdict(lambda: {'votos': 0, 'mandatos': 0})
+for district_data in grouped_district_results.values():
+    for colig, data in district_data.items():
+        national_group_totals[colig]['votos'] += data['votos']
+        national_group_totals[colig]['mandatos'] += data['mandatos']
+
+# Filter out special categories and sort
+valid_groups = [
+    {'name': k, 'votos': v['votos'], 'mandatos': v['mandatos']}
+    for k, v in national_group_totals.items()
+    if k not in ['Votos em branco', 'Votos nulos', 'TOTAL']
+]
+
+sorted_groups = sorted(
+    valid_groups,
+    key=lambda x: x['votos'],
+    reverse=True
+)
+
 #
 # ------------------------------------
-
 
 
 # ======================
@@ -290,6 +299,7 @@ final_group_results = [
 
 # Sort by votos descending
 final_group_results.sort(key=lambda x: x['votos'], reverse=True)
+
 
 # ======================
 # 6. PRINT FORMATTED RESULTS
@@ -337,13 +347,15 @@ def serve_index():
         'index.html',
         partidos=PARTIDOS,
         partidos_sorted=sorted_parties,
+        coligs_sorted=sorted_groups,
         blank_votes=blank_votes,
         null_votes=null_votes,
         total_valid=total_votes - blank_votes - null_votes,
         total_mandates=total_mandates,
         total_all=total_votes,
         distritos=DISTRITOS,
-        votos=raw_district_results  # Now with correct key names
+        votos=raw_district_results,  # Now with correct key names
+        votos_colig=grouped_district_results
     )
 
 # WSGI entry point
@@ -352,5 +364,5 @@ def create_app():
 
 if __name__ == '__main__':
     # app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
-    port = int(os.environ.get('PORT', 8080))  # GAE uses 8080 by default
+    port = int(os.environ.get('PORT', 8000))  # GAE uses 8080 by default
     app.run(host='0.0.0.0', port=port)  
