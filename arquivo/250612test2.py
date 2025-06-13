@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, abort, render_template
+from flask import Flask, request, jsonify, abort, render_template, send_file
 import pandas as pd
 import math
 from google.cloud import bigquery
@@ -357,6 +357,11 @@ def serve_index():
         votos=raw_district_results,  # Now with correct key names
         votos_colig=grouped_district_results
     )
+
+@app.route('/get_coligs_sorted')
+def get_coligs_sorted():
+    return jsonify(sorted_groups)
+
 
 # WSGI entry point
 def create_app():

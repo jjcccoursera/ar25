@@ -1,7 +1,10 @@
+import { ElectionCalculator } from './coligs.js';
 
 if (document.getElementById('coligs').classList.contains('visible-table')) {
     document.getElementById('distrito').value = 'Total nacional'
 }
+
+let results = {};
 
 
 document.getElementById('coligs-btn').addEventListener('click', () => {
@@ -44,7 +47,16 @@ document.getElementById('resultados-btn').addEventListener('click', () => {
     partidos_novo['Votos em branco'] = ['Votos em branco'];
     partidos_novo['Votos nulos'] = ['Votos nulos'];
     partidos = partidos_novo;
-
+    
+    const baseData = {
+        partidos: partidos,
+        districts: JSON.parse(document.getElementById('election-data').dataset.districts),
+    };
+    let calculator = new ElectionCalculator(baseData);
+    calculator.updateParties(partidos_novo);
+    
+    results = calculator.getFullResults();
+    
     // Send updated data to the server (example: console.log for now)
     // console.log(compareSorted(partidos, partidos_novo));
     document.getElementById('distrito-div').classList.remove('hidden');
@@ -56,7 +68,7 @@ document.getElementById('resultados-btn').addEventListener('click', () => {
     // if (compareSorted(partidos, partidos_novo)) {
     if (true) {
         const paroucolig = document.querySelector('input[name="paroucolig"]:checked').value;
-        console.log(paroucolig);
+        console.log(paroucolig, results);
         if (document.getElementById('distrito').value === 'Total nacional') {
             if (paroucolig === 'Partidos') {
                 document.getElementById('resultados').classList.remove('hidden');
@@ -66,8 +78,12 @@ document.getElementById('resultados-btn').addEventListener('click', () => {
             } else {
                 document.getElementById('resultados').classList.add('hidden');
                 document.getElementById('resultados').classList.remove ('visible-block');
-                document.getElementById('rescolig').classList.remove('hidden');
-                document.getElementById('rescolig').classList.add ('visible-block');
+                console.log(106, results['Total nacional'] );
+                updateDistrictGroupTable(results['Total nacional']);
+                document.getElementById('district-group-results-container').classList.remove('hidden');
+                document.getElementById('district-group-results-container').classList.add ('visible-block');
+                document.getElementById('rescolig').classList.add('hidden');
+                document.getElementById('rescolig').classList.remove ('visible-block');
             }
         } else {
             document.getElementById('resultados').classList.add('hidden');
@@ -115,12 +131,13 @@ document.getElementById('distrito').addEventListener('change', function() {
             districtGroupDiv.classList.add('hidden');
             districtGroupDiv.classList.remove('visible-block');
         } else {
-            rescoligDiv.classList.remove('hidden');
-            rescoligDiv.classList.add('visible-block'); 
+            rescoligDiv.classList.add('hidden');
+            rescoligDiv.classList.remove('visible-block'); 
             nacionalDiv.classList.add('hidden');
             nacionalDiv.classList.remove('visible-block');
-            districtGroupDiv.classList.add('hidden');
-            districtGroupDiv.classList.remove('visible-block');
+            updateDistrictGroupTable(results['Total nacional']);
+            districtGroupDiv.classList.remove('hidden');
+            districtGroupDiv.classList.add('visible-block');
         }  
     } else {
         nacionalDiv.classList.add('hidden');
@@ -136,7 +153,9 @@ document.getElementById('distrito').addEventListener('change', function() {
             districtDiv.classList.remove('hidden');
             districtDiv.classList.add('visible-block');
         } else {
-            const districtGroupData = getDistrictGroupData(selectedDistrict);
+            const districtGroupData = typeof results !== 'undefined' 
+                ? results[selectedDistrict]
+                : getDistrictGroupData(selectedDistrict);
             updateDistrictGroupTable(districtGroupData);
             districtGroupDiv.classList.remove('hidden');
             districtGroupDiv.classList.add('visible-block');
@@ -155,8 +174,8 @@ function getDistrictData(selectedDistrict) {
     .documentElement.textContent;
 
     // Then parse JSON
-    const electionData = JSON.parse(decodedData);
-    return districtData = getElectionData()[selectedDistrict] || {};
+    const districtData = getElectionData()[selectedDistrict] || {};
+    return districtData;
 }
 
 
@@ -198,7 +217,8 @@ function updateDistrictTable(data) {
         <td style="padding: 8px; text-align: right;">${(totalVotes - (data['Votos em branco']?.votos || 0) - (data['Votos nulos']?.votos || 0)).toLocaleString('pt-PT')}</td>
         <td style="padding: 8px; text-align: right;">100.00%</td>
         <td style="padding: 8px; text-align: right;">${totalMandates.toLocaleString('pt-PT')}</td>
-        <td style="padding: 8px; text-align: right;"> ${totalMandates > 0 ? Math.round(totalVotes/totalMandates).toLocaleString('pt-PT') : ''}</td>
+        <td style="padding: 8px; text-align: right;">
+        ${totalMandates > 0 ? Math.round((totalVotes - (data['Votos em branco']?.votos || 0) - (data['Votos nulos']?.votos || 0))/totalMandates).toLocaleString('pt-PT') : ''}</td>
     `;
     tbody.appendChild(validRow);
     
@@ -242,6 +262,7 @@ function updateDistrictTable(data) {
     
     // Make table visible
     table.classList.remove('hidden');
+    table.classList.add('visible-table');
 }
 
 function getElectionData() {
@@ -298,7 +319,8 @@ function updateDistrictGroupTable(data) {
         <td style="padding: 8px; text-align: right;">${(totalVotes - (data['Votos em branco']?.votos || 0) - (data['Votos nulos']?.votos || 0)).toLocaleString('pt-PT')}</td>
         <td style="padding: 8px; text-align: right;">100.00%</td>
         <td style="padding: 8px; text-align: right;">${totalMandates.toLocaleString('pt-PT')}</td>
-        <td style="padding: 8px; text-align: right;"> ${totalMandates > 0 ? Math.round(totalVotes/totalMandates).toLocaleString('pt-PT') : ''}</td>
+        <td style="padding: 8px; text-align: right;">
+        ${totalMandates > 0 ? Math.round((totalVotes - (data['Votos em branco']?.votos || 0) - (data['Votos nulos']?.votos || 0))/totalMandates).toLocaleString('pt-PT') : ''}</td>
     `;
     tbody.appendChild(validRow);
     
@@ -357,7 +379,26 @@ function getDistrictGroupData(selectedDistrict) {
     return electionGroupData[selectedDistrict] || {};
 }
 
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize calculator
+    const baseData = {
+        partidos: JSON.parse(document.getElementById('election-data').dataset.partidos),
+        districts: JSON.parse(document.getElementById('election-data').dataset.districts)
+    };
+    
+    const calculator = new ElectionCalculator(baseData);
+    
+    // Event handlers
+    document.querySelectorAll('.group-select').forEach(select => {
+        select.addEventListener('change', (e) => {
+            const party = e.target.closest('.party-group').dataset.party;
+            calculator.currentAllocations[party] = e.target.value;
+        });
+    });
+    
+  });
+
+document.addEventListener('DOMContentLoaded', function() {
     // Get all radio buttons with name="paroucolig"
     const radioButtons = document.querySelectorAll('input[name="paroucolig"]');
     
@@ -371,7 +412,7 @@ function getDistrictGroupData(selectedDistrict) {
                 if (this.value === 'Partidos') {
                     console.log('Partidos selected');
                     // Your code for "Partidos" selection here
-                    if (document.getElementById('distrito').value === 'Total nacional') {
+                    if (selectedDistrict === 'Total nacional') {
                         document.getElementById('resultados').classList.remove('hidden');
                         document.getElementById('resultados').classList.add('visible-block');
                         document.getElementById('rescolig').classList.add('hidden');
@@ -381,9 +422,7 @@ function getDistrictGroupData(selectedDistrict) {
                         document.getElementById('district-group-results-container').classList.add('hidden');
                         document.getElementById('district-group-results-container').classList.remove('visible-block');
                     } else {
-                        document.getElementById('district-results-container').classList.remove('hidden');
-                        document.getElementById('district-results-container').classList.add('visible-block');
-                        document.getElementById('resultados').classList.add('hidden');
+                       document.getElementById('resultados').classList.add('hidden');
                         document.getElementById('resultados').classList.remove ('visible-block');
                         document.getElementById('district-group-results-container').classList.add('hidden');
                         document.getElementById('district-group-results-container').classList.remove('visible-block');
@@ -391,19 +430,23 @@ function getDistrictGroupData(selectedDistrict) {
                         document.getElementById('rescolig').classList.remove ('visible-block');
                         const districtData = getDistrictData(selectedDistrict);
                         updateDistrictTable(districtData);
+                        document.getElementById('district-results-container').classList.remove('hidden');
+                        document.getElementById('district-results-container').classList.add('visible-block');
                     }
                 } else if (this.value === 'Coligações') {
                     console.log('Coligações selected');
                     // Your code for "Coligações" selection here
                     if (document.getElementById('distrito').value === 'Total nacional') {
-                        document.getElementById('rescolig').classList.remove('hidden');
-                        document.getElementById('rescolig').classList.add ('visible-block');
+                        document.getElementById('rescolig').classList.add('hidden');
+                        document.getElementById('rescolig').classList.remove ('visible-block');
                         document.getElementById('resultados').classList.add('hidden');
                         document.getElementById('resultados').classList.remove ('visible-block');
                         document.getElementById('district-results-container').classList.add('hidden');
                         document.getElementById('district-results-container').classList.remove ('visible-block');
-                        document.getElementById('district-group-results-container').classList.add('hidden');
-                        document.getElementById('district-group-results-container').classList.remove('visible-block');
+                        updateDistrictGroupTable(results['Total nacional']);
+                        document.getElementById('district-group-results-container').classList.remove('hidden');
+                        document.getElementById('district-group-results-container').classList.add('visible-block');
+
                     } else {
                         document.getElementById('district-group-results-container').classList.remove('hidden');
                         document.getElementById('district-group-results-container').classList.add('visible-block');
@@ -413,7 +456,9 @@ function getDistrictGroupData(selectedDistrict) {
                         document.getElementById('resultados').classList.remove ('visible-block');
                         document.getElementById('rescolig').classList.add('hidden');
                         document.getElementById('rescolig').classList.remove ('visible-block');
-                        const districtData = getDistrictGroupData(selectedDistrict);
+                        const districtData = typeof results !== 'undefined' 
+                            ? results[selectedDistrict]
+                            : getDistrictGroupData(selectedDistrict);
                         updateDistrictGroupTable(districtData);
                     }
                 }

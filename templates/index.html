@@ -50,12 +50,12 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        #resultados th, , #rescolig th, #district-results-container th {
+        #resultados th, #rescolig th, #district-results-container th {
             background-color: #4CAF50;
             color: white;
         }
 
-        #resultados tr:nth-child(even), #rescolig tr:nth-child(even), #district-results-container tr:nth-child(even) {
+        #resultados tr:nth-child(even), #rescolig tr:nth-child(even), #district-results-container tr:nth-child(even), #district-group-results-container tr:nth-child(even) {
             background-color: #f9f9f9;
         }
 
@@ -102,7 +102,8 @@
 
     </style>
     <title>AR25</title>
-    <script src="/static/js/app.js" defer></script>
+    <script type="module" src="{{ url_for('static', filename='js/coligs.js') }}"></script>
+    
 </head>
 
 <body>
@@ -179,6 +180,7 @@
 
     <div id="election-data" 
         data-districts="{{ votos | tojson | forceescape }}"
+        data-partidos="{{ partidos | tojson | forceescape }}"
         hidden
         style="display: none !important;">
     </div>
@@ -193,9 +195,9 @@
         <div style="display: flex; align-items: center; gap: 10px; font-family: arial; color: green;">
             <span style="color: green; font-size: 18px;">Visualizar por:</span>
             <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="radio" id="parts" name="paroucolig" value="Partidos" checked>
+                <input type="radio" id="parts" name="paroucolig" value="Partidos">
                 <label for="parts">Partidos</label>
-                <input type="radio" id="coligs" name="paroucolig" value="Coligações">
+                <input type="radio" id="coligs" name="paroucolig" value="Coligações" checked>
                 <label for="coligs">Coligações</label>
             </div>
         </div>
@@ -289,8 +291,8 @@
             </thead>
             <tbody>
                 <!-- Valid votes (sorted) -->
-                 {% for colig in coligs_sorted %}
-                 <tr>
+                {% for colig in coligs_sorted %}
+                <tr>
                      <td style="padding: 4px;">{{ colig['name'] }}</td>
                      <td style="padding: 4px; text-align: right;">{{ "{:,.0f}".format(colig['votos']/2) }}</td>
                      <td style="padding: 4px; text-align: right;">{{ "%.2f"|format(colig['votos']/2/total_valid*100) }}%</td>
@@ -375,6 +377,7 @@
     // Access PARTIDOS directly in JS
     window.partidos = {{ partidos | tojson | safe }};
 </script>
+<script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </html>
 
