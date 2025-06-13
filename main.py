@@ -8,6 +8,9 @@ import os
 
 """
     Allocates mandates to parties and groups of parties in all districts of Portugal using the Hondt method.
+
+    Implantada no GAE em 250613
+    
 """
 
 app = Flask(__name__, static_folder='static')
@@ -338,8 +341,6 @@ print(f"Null votos: {null_votes:,}")
 print(f"Total valid votos: {total_votes-blank_votes-null_votes:,}")
 
 
-
-
 @app.route('/')
 def serve_index():
     
@@ -357,11 +358,6 @@ def serve_index():
         votos=raw_district_results,  # Now with correct key names
         votos_colig=grouped_district_results
     )
-
-@app.route('/get_coligs_sorted')
-def get_coligs_sorted():
-    return jsonify(sorted_groups)
-
 
 # WSGI entry point
 def create_app():
