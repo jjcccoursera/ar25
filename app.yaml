@@ -20,3 +20,7 @@ automatic_scaling:
   min_instances: 1
   max_instances: 3
   target_cpu_utilization: 0.6
+
+# para permitir acesso sem autenticação:
+# gcloud projects add-iam-policy-binding apps-448519   --member=allUsers   --role="roles/appengine.appViewer"
+# gcloud iap web disable --resource-type=app-engine

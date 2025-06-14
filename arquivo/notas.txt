@@ -7,5 +7,10 @@ gunicorn --bind :8080 --workers 2 main:app (para correr localmente)
 
 gcloud app deploy
 
+para permitir acesso à webapp sem autenticação:
+(também dá esse acesso a todos os outros serviços e webapps do projecto apps-448519)
+gcloud projects add-iam-policy-binding apps-448519   --member=allUsers   --role="roles/appengine.appViewer"
+gcloud iap web disable --resource-type=app-engine
+
 https://chat.deepseek.com/a/chat/s/fb35b930-b941-440b-8e3d-a4c235f7689f
 https://chat.deepseek.com/a/chat/s/d2e86a55-e1f6-4337-879f-21d1b59be608

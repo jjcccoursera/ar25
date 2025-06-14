@@ -4,6 +4,14 @@ from google.oauth2 import service_account
 import time
 from datetime import datetime, UTC
 
+"""
+
+Este script obtém dados das eleições AR25 por distrito
+em https://www.legislativas2025.mai.gov.pt/frontend/data/TerritoryResults"
+e guarda-os numa tabela BigQuery.
+
+"""
+
 # Configuration
 BASE_URL = "https://www.legislativas2025.mai.gov.pt/frontend/data/TerritoryResults"
 # District mapping
