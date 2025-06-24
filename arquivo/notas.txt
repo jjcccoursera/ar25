@@ -14,3 +14,40 @@ gcloud iap web disable --resource-type=app-engine
 
 https://chat.deepseek.com/a/chat/s/fb35b930-b941-440b-8e3d-a4c235f7689f
 https://chat.deepseek.com/a/chat/s/d2e86a55-e1f6-4337-879f-21d1b59be608
+
+----
+https://chat.deepseek.com/a/chat/s/28d240bf-78a5-4d44-88d2-a1852fc8df55
+Since you're planning to set min_instances: 0 in your next deployment, let's clarify how health checks work in App Engine and why they matter for your configuration:
+What Health Checks Do in App Engine
+
+    Basic Function
+    Health checks are HTTP requests sent by App Engine to your instances to:
+
+        Verify instances are running
+
+        Detect unresponsive instances
+
+        Trigger automatic restarts of failed instances
+
+    With min_instances: 0
+    Health checks become especially important because:
+
+        They're the only way App Engine knows if your service is ready to handle traffic after scaling up from zero
+
+        A failing health check can prevent your instance from receiving user traffic
+
+    Default Behavior
+    If you don't configure health checks:
+
+        App Engine sends requests to /_ah/health every 5 seconds
+
+        Your instance must return HTTP 200 within 4 seconds
+
+    For Flask Apps
+        Ensure you have a route for /_ah/health:
+        python
+
+        @app.route('/_ah/health')
+        def health_check():
+            return 'Healthy', 200
+-------

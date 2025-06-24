@@ -359,6 +359,11 @@ def serve_index():
         votos_colig=grouped_district_results
     )
 
+@app.route('/_ah/health')
+def health_check():
+    return 'Healthy', 200
+
+    
 # WSGI entry point
 def create_app():
     return app

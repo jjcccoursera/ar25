@@ -17,10 +17,21 @@ handlers:
   script: auto
 
 automatic_scaling:
-  min_instances: 1
+  min_instances: 0
   max_instances: 3
   target_cpu_utilization: 0.6
+
+health_check:
+  enable_health_check: true
+  check_interval_sec: 5
+  timeout_sec: 4
+  unhealthy_threshold: 2
+  healthy_threshold: 2
+
 
 # para permitir acesso sem autenticação:
 # gcloud projects add-iam-policy-binding apps-448519   --member=allUsers   --role="roles/appengine.appViewer"
 # gcloud iap web disable --resource-type=app-engine
+
+# https://chat.deepseek.com/a/chat/s/28d240bf-78a5-4d44-88d2-a1852fc8df55
+
