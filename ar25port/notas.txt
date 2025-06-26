@@ -1,1 +1,187 @@
 https://copilot.microsoft.com/chats/X5X2VMkruAjhU2Gza5xug
+
+-----
+
+When Flask runs with flask run, it’s great for development — but it's not intended for public traffic. That’s where a reverse proxy like Nginx (or Caddy) comes in.
+
+Here’s what that means and why it matters:
+💡 Why use a reverse proxy?
+
+    Handles HTTPS: Automatically gets and renews SSL certificates using Let’s Encrypt.
+
+    Forwards traffic: Public requests to https://your-domain.com are passed to your internal Flask app running on localhost:5000.
+
+    Improves reliability: Can restart the app if it crashes (via Gunicorn or similar).
+
+    Boosts performance: Caches static assets like JS/CSS/images.
+
+⚙️ What the setup looks like
+
+    Your Flask app runs on the VPS at something like localhost:5000.
+
+    Nginx listens on port 80 (HTTP) and 443 (HTTPS) to the outside world.
+
+    Nginx forwards requests to Flask (via a WSGI server like gunicorn).
+
+    Visitors see a secure, fast web app at your-domain.com.
+-----
+
+A virtual environment — or venv — is like giving your project its own little Python universe. It keeps your app’s dependencies isolated from your system Python, which is great for avoiding version clashes and for clean deployment later on.
+
+Here's how to set one up inside your AR25PORT folder:
+🛠 Create and activate a venv
+cd ~/AR25PORT
+python3 -m venv venv        # Create a virtual environment named 'venv'
+source venv/bin/activate    # Activate it
+
+how to exit venv
+
+Just a quick deactivate will do the trick
+
+-----
+
+So from Cloud Shell, the command to copy your project folder over should be:
+
+scp -r ~/AR25PORT admin@193.181.208.117:~
+
+This will copy the entire AR25PORT folder into the admin user's home directory on your Webdock server.
+
+scp ar25port.zip admin@jc.vps.webdock.cloud:~
+
+-----
+
+ Set up Nginx as a reverse proxy
+
+This will:
+
+    Route external HTTP requests to your Flask app via Gunicorn
+
+    Serve static files if needed
+
+    Allow you to secure the site with HTTPS (soon)
+
+Let’s do this:
+
+1. Install Nginx
+sudo apt install nginx
+
+2. Create an Nginx config for your app
+sudo nano /etc/nginx/sites-available/ar25port
+
+Paste this config (replace jc.vps.webdock.cloud with your real domain or use your IP for now):
+
+server {
+    listen 80;
+    server_name jc.vps.webdock.cloud;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+ Enable the site and restart Nginx
+
+sudo ln -s /etc/nginx/sites-available/ar25port /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+
+-----
+
+Let’s get SSL with Let’s Encrypt
+
+Best part? It’s free and easy with a tool called Certbot. You install it, run it once, and it:
+
+    Gets a free certificate from Let’s Encrypt
+
+    Configures Nginx to use it
+
+    Sets up automatic renewal
+
+Here’s how it works:
+
+🧪 Step 1: Install Certbot & Nginx plugin
+
+sudo apt update
+sudo apt install certbot python3-certbot-nginx
+
+Step 2: Run Certbot
+
+Assuming your domain (jc.vps.webdock.cloud) points to this server:
+
+sudo certbot --nginx -d jc.vps.webdock.cloud
+
+ Step 3: Confirm auto-renewal
+
+Certbot adds a cron job or systemd timer automatically, but you can test it manually:
+
+sudo certbot renew --dry-run
+
+If you ever want to check the cert status:
+
+sudo certbot certificates
+
+-----
+
+Why run Gunicorn as a systemd daemon?
+
+Right now, you're starting Gunicorn manually with:
+
+gunicorn -w 4 -b 127.0.0.1:5000 main:app
+
+That works fine… until:
+
+    The server reboots
+
+    You close the terminal or lose SSH
+
+    Gunicorn crashes for any reason
+
+With a background service (via systemd), Gunicorn becomes a self-managing process. That means:
+
+    ✅ Starts automatically on boot
+
+    ✅ Restarts on failure
+
+    ✅ Runs quietly in the background
+
+    ✅ You can control it like this:
+
+sudo systemctl start gunicorn
+sudo systemctl stop gunicorn
+sudo systemctl status gunicorn
+
+ Step 1: Create a gunicorn.service file
+
+We’ll tell systemd how to launch and manage Gunicorn. Run:
+
+sudo nano /etc/systemd/system/gunicorn.service
+
+    [Unit]
+    Description=Gunicorn for ar25port
+    After=network.target
+
+    [Service]
+    User=admin
+    Group=www-data
+    WorkingDirectory=/home/admin/ar25port
+    Environment="PATH=/home/admin/ar25port/venv/bin"
+    ExecStart=/home/admin/ar25port/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 main:app
+
+    Restart=always
+    RestartSec=3
+
+    [Install]
+    WantedBy=multi-user.target
+
+Step 2: Start and enable it
+
+Now activate the service:
+
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl start gunicorn
+sudo systemctl enable gunicorn
+sudo systemctl status gunicorn
+
