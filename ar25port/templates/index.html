@@ -377,7 +377,7 @@
     // Access PARTIDOS directly in JS
     window.partidos = {{ partidos | tojson | safe }};
 </script>
-<script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/app.js') | replace('/static/', '/ar25/static/') }}"></script>
 
 </html>
 
