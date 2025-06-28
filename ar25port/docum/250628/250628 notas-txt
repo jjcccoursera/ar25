@@ -1,0 +1,65 @@
+Em 250628, existiu comportamento bizarro de jc.vps.webdock.cloud:
+jc.vps.webdock.cloud/ar25 servia a app nearbyaircraft, perfeitamente
+jc.vps.webdock.cloud/nearbyaircraft dava 502
+jc.vps.webdock.cloud dava 404
+
+Reiniciei jc.vps.webdock.cloud e:
+jc.vps.webdock.cloud/ar25 passou a servir ar25, perfeitamente
+jc.vps.webdock.cloud/dava 502
+jc.vps.webdock.cloud dava 404
+
+Conforme https://chat.deepseek.com/a/chat/s/f70ce61f-58be-4d4f-a76e-d894dcb84e0d,
+anotei a configuração que gera o resultado descrito (ar25 a funcionar)
+antes de abordar a questão do não funcionamento de nearbyaircraft.
+Guardei tudo nesta pasta.
+
+
+admin@jc:~$ ps aux | grep gunicorn | grep ar25
+admin        817  0.0  1.5  37244 27844 ?        Ss   23:02   0:00 /home/admin/ar25port/venv/bin/python3 /home/admin/ar25port/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 main:app
+admin       1049  0.0  6.5 338472 114636 ?       Sl   23:02   0:01 /home/admin/ar25port/venv/bin/python3 /home/admin/ar25port/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 main:app
+admin       1053  0.0  6.5 339288 115792 ?       Sl   23:02   0:01 /home/admin/ar25port/venv/bin/python3 /home/admin/ar25port/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 main:app
+admin       1064  0.0  6.4 338472 114388 ?       Sl   23:02   0:01 /home/admin/ar25port/venv/bin/python3 /home/admin/ar25port/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 main:app
+admin       1066  0.0  6.5 339292 115280 ?       Sl   23:02   0:01 /home/admin/ar25port/venv/bin/python3 /home/admin/ar25port/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 main:app
+
+
+server {
+    listen       80;
+    server_name  localhost;
+
+    #access_log  /var/log/nginx/host.access.log  main;
+
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+    }
+
+    location /ar25/ {
+        rewrite ^/ar25(/.*)?$ $1 break;
+        proxy_pass http://localhost:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+ ...
+server {
+    listen 443 ssl;
+    server_name jc.vps.webdock.cloud;
+
+    ssl_certificate /etc/letsencrypt/live/jc.vps.webdock.cloud/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/jc.vps.webdock.cloud/privkey.pem;
+
+    location /ar25/ {
+        rewrite ^/ar25(/.*)?$ $1 break;
+        proxy_pass http://localhost:5000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+...
+
+
+admin@jc:~$ sudo lsof -i :5000  # Should show Gunicorn
+COMMAND   PID  USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+gunicorn  817 admin    5u  IPv4  11615      0t0  TCP jc.vps.webdock.cloud:5000 (LISTEN)
+gunicorn 1049 admin    5u  IPv4  11615      0t0  TCP jc.vps.webdock.cloud:5000 (LISTEN)
+gunicorn 1053 admin    5u  IPv4  11615      0t0  TCP jc.vps.webdock.cloud:5000 (LISTEN)
+gunicorn 1064 admin    5u  IPv4  11615      0t0  TCP jc.vps.webdock.cloud:5000 (LISTEN)
+gunicorn 1066 admin    5u  IPv4  11615      0t0  TCP jc.vps.webdock.cloud:5000 (LISTEN)
